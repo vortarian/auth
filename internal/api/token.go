@@ -301,21 +301,8 @@ func (a *API) PKCE(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 	return sendJSON(w, http.StatusOK, token)
 }
 
-func (a *API) generateAccessToken(ctx context.Context, tx *storage.Connection, user *models.User, sessionId *uuid.UUID, authenticationMethod models.AuthenticationMethod) (string, int64, error) {
+func (a *API) generateAccessToken(ctx context.Context, tx *storage.Connection, user *models.User, sid string, authenticationMethod models.AuthenticationMethod, aal string, amr []models.AMREntry) (string, int64, error) {
 	config := a.config
-	aal, amr := models.AAL1.String(), []models.AMREntry{}
-	sid := ""
-	if sessionId != nil {
-		sid = sessionId.String()
-		session, terr := models.FindSessionByID(tx, *sessionId, false)
-		if terr != nil {
-			return "", 0, terr
-		}
-		aal, amr, terr = session.CalculateAALAndAMR(user)
-		if terr != nil {
-			return "", 0, terr
-		}
-	}
 
 	issuedAt := time.Now().UTC()
 	expiresAt := issuedAt.Add(time.Second * time.Duration(config.JWT.Exp)).Unix()
@@ -359,21 +346,28 @@ func (a *API) generateAccessToken(ctx context.Context, tx *storage.Connection, u
 	} else {
 		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	}
-
-	if config.JWT.KeyID != "" {
-		if token.Header == nil {
-			token.Header = make(map[string]interface{})
-		}
-
-		token.Header["kid"] = config.JWT.KeyID
-	}
-
-	signed, err := token.SignedString([]byte(config.JWT.Secret))
+	signed, err := signTokenClaims(config.JWT.KeyID, config.JWT.Secret, token)
 	if err != nil {
 		return "", 0, err
 	}
 
 	return signed, expiresAt, nil
+}
+
+func signTokenClaims(jwtKeyID, jwtSecret string, token *jwt.Token) (string, error) {
+	if jwtKeyID != "" {
+		if token.Header == nil {
+			token.Header = make(map[string]interface{})
+		}
+
+		token.Header["kid"] = jwtKeyID
+	}
+
+	signed, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
+	return signed, nil
 }
 
 func (a *API) issueRefreshToken(ctx context.Context, conn *storage.Connection, user *models.User, authenticationMethod models.AuthenticationMethod, grantParams models.GrantParams) (*AccessTokenResponse, error) {
@@ -398,8 +392,16 @@ func (a *API) issueRefreshToken(ctx context.Context, conn *storage.Connection, u
 		if terr != nil {
 			return terr
 		}
+		session, terr := models.FindSessionByID(tx, *refreshToken.SessionId, false)
+		if terr != nil {
+			return terr
+		}
+		aal, amr, terr := session.CalculateAALAndAMR(user)
+		if terr != nil {
+			return terr
+		}
 
-		tokenString, expiresAt, terr = a.generateAccessToken(ctx, tx, user, refreshToken.SessionId, authenticationMethod)
+		tokenString, expiresAt, terr = a.generateAccessToken(ctx, tx, user, refreshToken.SessionId.String(), authenticationMethod, aal, amr)
 		if terr != nil {
 			// Account for Hook Error
 			httpErr, ok := terr.(*HTTPError)
@@ -455,19 +457,20 @@ func (a *API) updateMFASessionAndClaims(r *http.Request, tx *storage.Connection,
 		if terr != nil {
 			return terr
 		}
-		aal, _, terr := session.CalculateAALAndAMR(user)
+		aal, amr, terr := session.CalculateAALAndAMR(user)
 		if terr != nil {
 			return terr
+		}
+
+		if err := session.UpdateAssociatedAAL(tx, aal); err != nil {
+			return err
 		}
 
 		if err := session.UpdateAssociatedFactor(tx, grantParams.FactorID); err != nil {
 			return err
 		}
-		if err := session.UpdateAssociatedAAL(tx, aal); err != nil {
-			return err
-		}
 
-		tokenString, expiresAt, terr = a.generateAccessToken(ctx, tx, user, &sessionId, models.TOTPSignIn)
+		tokenString, expiresAt, terr = a.generateAccessToken(ctx, tx, user, session.ID.String(), models.TOTPSignIn, aal, amr)
 		if terr != nil {
 			httpErr, ok := terr.(*HTTPError)
 			if ok {
