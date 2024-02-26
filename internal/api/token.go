@@ -11,7 +11,6 @@ import (
 
 	"fmt"
 
-	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
 	"github.com/xeipuuv/gojsonschema"
 
@@ -426,22 +425,19 @@ func (a *API) issueRefreshToken(ctx context.Context, conn *storage.Connection, u
 	}, nil
 }
 
-func (a *API) updateMFASessionAndClaims(r *http.Request, tx *storage.Connection, user *models.User, authenticationMethod models.AuthenticationMethod, grantParams models.GrantParams) (*AccessTokenResponse, error) {
-	ctx := r.Context()
+func (a *API) updateMFASessionAndClaims(ctx context.Context, r *http.Request, tx *storage.Connection, user *models.User, authenticationMethod models.AuthenticationMethod, grantParams models.GrantParams) (*AccessTokenResponse, error) {
 	config := a.config
 	var tokenString string
 	var expiresAt int64
 	var refreshToken *models.RefreshToken
-	currentClaims := getClaims(ctx)
-	sessionId, err := uuid.FromString(currentClaims.SessionId)
-	if err != nil {
-		return nil, internalServerError("Cannot read SessionId claim as UUID").WithInternalError(err)
-	}
-	err = tx.Transaction(func(tx *storage.Connection) error {
-		if terr := models.AddClaimToSession(tx, sessionId, authenticationMethod); terr != nil {
+	session := getSession(ctx)
+
+	err := tx.Transaction(func(tx *storage.Connection) error {
+		if terr := models.AddClaimToSession(tx, session.ID, authenticationMethod); terr != nil {
 			return terr
 		}
-		session, terr := models.FindSessionByID(tx, sessionId, false)
+		// TODO: Find a way to remove this. We reload the session so claims above are considered
+		session, terr := models.FindSessionByID(tx, session.ID, false)
 		if terr != nil {
 			return terr
 		}
