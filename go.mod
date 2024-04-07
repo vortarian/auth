@@ -6,7 +6,7 @@ require (
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
 	github.com/badoux/checkmail v0.0.0-20170203135005-d0a759655d62
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc
-	github.com/coreos/go-oidc/v3 v3.6.0
+	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/didip/tollbooth/v5 v5.1.1
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/gobuffalo/validate/v3 v3.3.3 // indirect
@@ -30,14 +30,15 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/crypto v0.20.0
-	golang.org/x/oauth2 v0.7.0
+	golang.org/x/crypto v0.22.0
+	golang.org/x/oauth2 v0.19.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
 require (
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
 	github.com/gobuffalo/nulls v0.4.2 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
@@ -98,7 +99,7 @@ require (
 	github.com/gobuffalo/plush/v4 v4.1.18 // indirect
 	github.com/gobuffalo/tags/v3 v3.1.4 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
@@ -135,10 +136,10 @@ require (
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.56.3 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

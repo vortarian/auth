@@ -62,6 +62,13 @@ type OAuthProviderConfiguration struct {
 	SkipNonceCheck bool     `json:"skip_nonce_check" split_words:"true"`
 }
 
+type Auth0ProviderConfiguration struct {
+	ClientID     string `json:"client_id" split_words:"true"`
+	ClientSecret string `json:"secret"`
+	RedirectURI  string `json:"redirect_uri" split_words:"true"`
+	Domain       string `json:"domain" yaml:"domain"`
+}
+
 type AnonymousProviderConfiguration struct {
 	Enabled bool `json:"enabled" default:"false"`
 }
@@ -280,6 +287,7 @@ type EmailContentConfiguration struct {
 type ProviderConfiguration struct {
 	AnonymousUsers          AnonymousProviderConfiguration `json:"anonymous_users" split_words:"true"`
 	Apple                   OAuthProviderConfiguration     `json:"apple"`
+	Auth0                   Auth0ProviderConfiguration     `json:"auth0"`
 	Azure                   OAuthProviderConfiguration     `json:"azure"`
 	Bitbucket               OAuthProviderConfiguration     `json:"bitbucket"`
 	Discord                 OAuthProviderConfiguration     `json:"discord"`
